@@ -10,7 +10,6 @@ export class SheetsController {
     @Post('/bet-created')
     async handleBetCreate(@Body() body: any) {
         this.logger.log(`Received bet created event: ${JSON.stringify(body)}`);
-        return this.sheetsService.handleBetCreate(body);
     }
 
     @Post('/game-created')
