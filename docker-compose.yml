@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: betting-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - betting-network
+
+  odds-service:
+    build:
+      context: ./odds-service
+      dockerfile: Dockerfile
+    container_name: betting-odds-service
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      NODE_ENV: ${NODE_ENV}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - betting-network
+    restart: unless-stopped
+
+  bets-service:
+    build:
+      context: ./bets-service
+      dockerfile: Dockerfile
+    container_name: betting-bets-service
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      NODE_ENV: ${NODE_ENV}
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres
+    networks:
+      - betting-network
+    restart: unless-stopped
+
+  google-sheets-service:
+    build:
+      context: ./google-sheets-service
+      dockerfile: Dockerfile
+    container_name: betting-google-sheets-service
+    ports:
+      - "3002:3000"
+    networks:
+      - betting-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  betting-network:
+    driver: bridge 
